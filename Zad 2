@@ -1,0 +1,121 @@
+using System;
+
+interface IDocument
+{
+    string Name { get; }
+}
+
+class PDFDocument : IDocument
+{
+    public string Name { get; }
+
+    public PDFDocument(string name)
+    {
+        Name = name;
+    }
+}
+
+interface IFax
+{
+    void Fax(IDocument document);
+}
+
+class Copier : IFax
+{
+    private bool isOn;
+    private int counter;
+    private int printCounter;
+    private int scanCounter;
+
+    public void PowerOn()
+    {
+        if (!isOn)
+        {
+            isOn = true;
+            Console.WriteLine("Copier is turned on");
+        }
+    }
+
+    public void PowerOff()
+    {
+        if (isOn)
+        {
+            isOn = false;
+            Console.WriteLine("Copier is turned off");
+        }
+    }
+
+    public void Print(in IDocument document)
+    {
+        if (isOn)
+        {
+            printCounter++;
+            Console.WriteLine($"{DateTime.Now} Print: {document.Name}");
+        }
+    }
+
+    public void Scan(out IDocument document)
+    {
+        document = null;
+        if (isOn)
+        {
+            scanCounter++;
+            string scanName = $"ImageScan{scanCounter}.jpg";
+            document = new ImageDocument(scanName);
+            Console.WriteLine($"{DateTime.Now} Scan: {scanName}");
+        }
+    }
+
+    public void ScanAndPrint()
+    {
+        if (isOn)
+        {
+            scanCounter++;
+            string scanName = $"ImageScan{scanCounter}.jpg";
+            Console.WriteLine($"{DateTime.Now} Scan: {scanName}");
+            Print(new ImageDocument(scanName));
+        }
+    }
+
+    public void Fax(IDocument document)
+    {
+        if (isOn)
+        {
+            Console.WriteLine($"{DateTime.Now} Fax: {document.Name}");
+        }
+    }
+
+    public int Counter => counter;
+    public int PrintCounter => printCounter;
+    public int ScanCounter => scanCounter;
+}
+
+class ImageDocument : IDocument
+{
+    public string Name { get; }
+
+    public ImageDocument(string name)
+    {
+        Name = name;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var xerox = new Copier();
+        xerox.PowerOn();
+        IDocument doc1 = new PDFDocument("aaa.pdf");
+        xerox.Print(in doc1);
+
+        IDocument doc2;
+        xerox.Scan(out doc2);
+
+        xerox.ScanAndPrint();
+        xerox.Fax(doc2);
+        Console.WriteLine(xerox.Counter);
+        Console.WriteLine(xerox.PrintCounter);
+        Console.WriteLine(xerox.ScanCounter);
+    }
+}
