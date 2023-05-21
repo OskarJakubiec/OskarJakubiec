@@ -1,0 +1,243 @@
+enum State
+{
+    Off,
+    Standby,
+    On
+}
+
+interface IDevice
+{
+    State DeviceState { get; }
+    void PowerOn();
+    void PowerOff();
+    void StandbyOn();
+    void StandbyOff();
+}
+
+interface IPrinter : IDevice
+{
+    void Print(in IDocument document);
+}
+
+interface IScanner : IDevice
+{
+    void Scan(out IDocument document);
+}
+
+class PDFDocument : IDocument
+{
+    public string Name { get; }
+
+    public PDFDocument(string name)
+    {
+        Name = name;
+    }
+}
+
+class Printer : IPrinter
+{
+    private State deviceState;
+    private int counter;
+    private int printCounter;
+
+    public State DeviceState => deviceState;
+
+    public void PowerOn()
+    {
+        SetState(State.On);
+        Console.WriteLine("Printer is turned on");
+    }
+
+    public void PowerOff()
+    {
+        SetState(State.Off);
+        Console.WriteLine("Printer is turned off");
+    }
+
+    public void StandbyOn()
+    {
+        SetState(State.Standby);
+        Console.WriteLine("Printer is in standby mode");
+    }
+
+    public void StandbyOff()
+    {
+        SetState(State.On);
+        Console.WriteLine("Printer is out of standby mode");
+    }
+
+    public void Print(in IDocument document)
+    {
+        if (deviceState == State.On)
+        {
+            printCounter++;
+            Console.WriteLine($"{DateTime.Now} Print: {document.Name}");
+            if (printCounter % 3 == 0)
+            {
+                StandbyOn();
+            }
+        }
+    }
+
+    protected void SetState(State state)
+    {
+        deviceState = state;
+    }
+}
+
+class Scanner : IScanner
+{
+    private State deviceState;
+    private int counter;
+    private int scanCounter;
+
+    public State DeviceState => deviceState;
+
+    public void PowerOn()
+    {
+        SetState(State.On);
+        Console.WriteLine("Scanner is turned on");
+    }
+
+    public void PowerOff()
+    {
+        SetState(State.Off);
+        Console.WriteLine("Scanner is turned off");
+    }
+
+    public void StandbyOn()
+    {
+        SetState(State.Standby);
+        Console.WriteLine("Scanner is in standby mode");
+    }
+
+    public void StandbyOff()
+    {
+        SetState(State.On);
+        Console.WriteLine("Scanner is out of standby mode");
+    }
+
+    public void Scan(out IDocument document)
+    {
+        document = null;
+        if (deviceState == State.On)
+        {
+            scanCounter++;
+            string scanName = $"ImageScan{scanCounter}.jpg";
+            document = new ImageDocument(scanName);
+            Console.WriteLine($"{DateTime.Now} Scan: {scanName}");
+            if (scanCounter % 2 == 0)
+            {
+                StandbyOn();
+            }
+        }
+    }
+
+    protected void SetState(State state)
+    {
+        deviceState = state;
+    }
+}
+
+class ImageDocument : IDocument
+{
+    public string Name { get; }
+
+    public ImageDocument(string name)
+    {
+        Name = name;
+    }
+}
+
+class Copier : IPrinter, IScanner
+{
+    private readonly IPrinter printer;
+    private readonly IScanner scanner;
+    private State deviceState;
+    private int counter;
+
+    public State DeviceState => deviceState;
+
+    public Copier(IPrinter printer, IScanner scanner)
+    {
+        this.printer = printer;
+        this.scanner = scanner;
+        deviceState = State.Off;
+    }
+
+    public void PowerOn()
+    {
+        printer.PowerOn();
+        scanner.PowerOn();
+        SetState(State.On);
+        Console.WriteLine("Copier is turned on");
+    }
+
+    public void PowerOff()
+    {
+        printer.PowerOff();
+        scanner.PowerOff();
+        SetState(State.Off);
+        Console.WriteLine("Copier is turned off");
+    }
+
+    public void StandbyOn()
+    {
+        printer.StandbyOn();
+        scanner.StandbyOn();
+        SetState(State.Standby);
+        Console.WriteLine("Copier is in standby mode");
+    }
+
+    public void StandbyOff()
+    {
+        printer.StandbyOff();
+        scanner.StandbyOff();
+        SetState(State.On);
+        Console.WriteLine("Copier is out of standby mode");
+    }
+
+    public void Print(in IDocument document)
+    {
+        if (deviceState == State.On)
+        {
+            printer.Print(document);
+        }
+    }
+
+    public void Scan(out IDocument document)
+    {
+        document = null;
+        if (deviceState == State.On)
+        {
+            scanner.Scan(out document);
+        }
+    }
+
+    protected void SetState(State state)
+    {
+        deviceState = state;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var printer = new Printer();
+        var scanner = new Scanner();
+        var copier = new Copier(printer, scanner);
+
+        copier.PowerOn();
+        IDocument doc1 = new PDFDocument("aaa.pdf");
+        copier.Print(in doc1);
+
+        IDocument doc2;
+        copier.Scan(out doc2);
+
+        copier.Scan(out doc2);
+        copier.StandbyOn();
+
+        copier.PowerOff();
+    }
+}
