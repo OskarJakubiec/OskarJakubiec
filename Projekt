@@ -1,0 +1,213 @@
+public class KlientManager
+{
+    private string connectionString;
+
+    public KlientManager(string connectionString)
+    {
+        this.connectionString = connectionString;
+    }
+
+    public List<Klient> GetKlienci()
+    {
+        List<Klient> klienci = new List<Klient>();
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "SELECT ID, Imie, Nazwisko, Email FROM Klienci";
+
+            SqlCommand command = new SqlCommand(query, connection);
+
+            connection.Open();
+
+            SqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int id = (int)reader["ID"];
+                string imie = reader["Imie"].ToString();
+                string nazwisko = reader["Nazwisko"].ToString();
+                string email = reader["Email"].ToString();
+
+                Klient klient = new Klient(id, imie, nazwisko, email);
+                klienci.Add(klient);
+            }
+
+            reader.Close();
+        }
+
+        return klienci;
+    }
+
+    public void DodajKlienta(Klient klient)
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "INSERT INTO Klienci (Imie, Nazwisko, Email) VALUES (@Imie, @Nazwisko, @Email)";
+
+            SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Imie", klient.Imie);
+            command.Parameters.AddWithValue("@Nazwisko", klient.Nazwisko);
+            command.Parameters.AddWithValue("@Email", klient.Email);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+        }
+    }
+
+    public void EdytujKlienta(Klient klient)
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "UPDATE Klienci SET Imie = @Imie, Nazwisko = @Nazwisko, Email = @Email WHERE ID = @ID";
+
+            SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Imie", klient.Imie);
+            command.Parameters.AddWithValue("@Nazwisko", klient.Nazwisko);
+            command.Parameters.AddWithValue("@Email", klient.Email);
+            command.Parameters.AddWithValue("@ID", klient.ID);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+        }
+    }
+
+    public void UsunKlienta(int id)
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "DELETE FROM Klienci WHERE ID = @ID";
+
+            SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@ID", id);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+        }
+    }
+}
+
+public class Klient
+{
+    public int ID { get; set; }
+    public string Imie { get; set; }
+    public string Nazwisko { get; set; }
+    public string Email { get; set; }
+
+    public Klient(int id, string imie, string nazwisko, string email)
+    {
+        ID = id;
+        Imie = imie;
+        Nazwisko = nazwisko;
+        Email = email;
+    }
+}
+
+public class ZamowienieManager
+{
+    private string connectionString;
+
+    public ZamowienieManager(string connectionString)
+    {
+        this.connectionString = connectionString;
+    }
+
+    public List<Zamowienie> GetZamowienia()
+    {
+        List<Zamowienie> zamowienia = new List<Zamowienie>();
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "SELECT ID, KlientID, Data, Kwota FROM Zamowienia";
+
+            SqlCommand command = new SqlCommand(query, connection);
+
+            connection.Open();
+
+            SqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int id = (int)reader["ID"];
+                int klientID = (int)reader["KlientID"];
+                DateTime data = (DateTime)reader["Data"];
+                decimal kwota = (decimal)reader["Kwota"];
+
+                Zamowienie zamowienie = new Zamowienie(id, klientID, data, kwota);
+                zamowienia.Add(zamowienie);
+            }
+
+            reader.Close();
+        }
+
+        return zamowienia;
+    }
+
+    public void DodajZamowienie(Zamowienie zamowienie)
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "INSERT INTO Zamowienia (KlientID, Data, Kwota) VALUES (@KlientID, @Data, @Kwota)";
+
+            SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@KlientID", zamowienie.KlientID);
+            command.Parameters.AddWithValue("@Data", zamowienie.Data);
+            command.Parameters.AddWithValue("@Kwota", zamowienie.Kwota);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+        }
+    }
+
+    public void EdytujZamowienie(Zamowienie zamowienie)
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "UPDATE Zamowienia SET KlientID = @KlientID, Data = @Data, Kwota = @Kwota WHERE ID = @ID";
+
+            SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@KlientID", zamowienie.KlientID);
+            command.Parameters.AddWithValue("@Data", zamowienie.Data);
+            command.Parameters.AddWithValue("@Kwota", zamowienie.Kwota);
+            command.Parameters.AddWithValue("@ID", zamowienie.ID);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+        }
+    }
+
+    public void UsunZamowienie(int id)
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            string query = "DELETE FROM Zamowienia WHERE ID = @ID";
+
+            SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@ID", id);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+        }
+    }
+}
+
+public class Zamowienie
+{
+    public int ID { get; set; }
+    public int KlientID { get; set; }
+    public DateTime Data { get; set; }
+    public decimal Kwota { get; set; }
+
+    public Zamowienie(int id, int klientID, DateTime data, decimal kwota)
+    {
+        ID = id;
+        KlientID = klientID;
+        Data = data;
+        Kwota = kwota;
+    }
+}
