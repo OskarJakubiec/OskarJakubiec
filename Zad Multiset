@@ -1,0 +1,149 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+public interface IMultiSet<T> : IEnumerable<T>
+{
+    int Count { get; }
+    bool IsEmpty { get; }
+    int this[T item] { get; set; }
+    IEnumerable<T> DistinctItems { get; }
+    bool Contains(T item);
+    void Add(T item);
+    void Add(T item, int count);
+    bool Remove(T item);
+    bool Remove(T item, int count);
+    void Clear();
+}
+
+public class MultiSet<T> : IMultiSet<T>
+{
+    private Dictionary<T, int> dictionary;
+
+    public MultiSet()
+    {
+        dictionary = new Dictionary<T, int>();
+    }
+
+    public MultiSet(IEqualityComparer<T> comparer)
+    {
+        dictionary = new Dictionary<T, int>(comparer);
+    }
+
+    public int Count
+    {
+        get
+        {
+            int count = 0;
+            foreach (var value in dictionary.Values)
+            {
+                count += value;
+            }
+            return count;
+        }
+    }
+
+    public bool IsEmpty => Count == 0;
+
+    public int this[T item]
+    {
+        get
+        {
+            if (dictionary.ContainsKey(item))
+            {
+                return dictionary[item];
+            }
+            return 0;
+        }
+        set
+        {
+            if (value > 0)
+            {
+                dictionary[item] = value;
+            }
+            else
+            {
+                dictionary.Remove(item);
+            }
+        }
+    }
+
+    public IEnumerable<T> DistinctItems => dictionary.Keys;
+
+    public bool Contains(T item)
+    {
+        return dictionary.ContainsKey(item);
+    }
+
+    public void Add(T item)
+    {
+        Add(item, 1);
+    }
+
+    public void Add(T item, int count)
+    {
+        if (count <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than zero.");
+        }
+
+        if (dictionary.ContainsKey(item))
+        {
+            dictionary[item] += count;
+        }
+        else
+        {
+            dictionary[item] = count;
+        }
+    }
+
+    public bool Remove(T item)
+    {
+        return Remove(item, 1);
+    }
+
+    public bool Remove(T item, int count)
+    {
+        if (count <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than zero.");
+        }
+
+        if (dictionary.ContainsKey(item))
+        {
+            int currentCount = dictionary[item];
+            if (count >= currentCount)
+            {
+                dictionary.Remove(item);
+                return true;
+            }
+            else
+            {
+                dictionary[item] -= count;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void Clear()
+    {
+        dictionary.Clear();
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        foreach (var kvp in dictionary)
+        {
+            for (int i = 0; i < kvp.Value; i++)
+            {
+                yield return kvp.Key;
+            }
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+}
