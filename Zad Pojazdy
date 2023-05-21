@@ -1,0 +1,287 @@
+enum EnvironmentType
+{
+    Land,
+    Water,
+    Air
+}
+
+interface IVehicle
+{
+    bool IsMoving { get; }
+    float CurrentSpeed { get; }
+    void Start();
+    void Stop();
+    void Accelerate(float value);
+    void Decelerate(float value);
+    string ToString();
+}
+
+abstract class Vehicle : IVehicle
+{
+    protected EnvironmentType environment;
+    protected float minSpeed;
+    protected float maxSpeed;
+    protected float currentSpeed;
+    protected bool isMoving;
+
+    public bool IsMoving => isMoving;
+    public float CurrentSpeed => currentSpeed;
+
+    public abstract void Start();
+    public abstract void Stop();
+    public abstract void Accelerate(float value);
+    public abstract void Decelerate(float value);
+
+    public override string ToString()
+    {
+        string type = GetType().Name;
+        string environmentName = Enum.GetName(typeof(EnvironmentType), environment);
+        string status = isMoving ? "Moving" : "Stopped";
+        return $"Type: {type}, Environment: {environmentName}, Status: {status}, Current Speed: {currentSpeed}";
+    }
+}
+
+class LandVehicle : Vehicle
+{
+    private int numberOfWheels;
+
+    public LandVehicle(int wheels)
+    {
+        environment = EnvironmentType.Land;
+        minSpeed = 1f;
+        maxSpeed = 350f;
+        numberOfWheels = wheels;
+    }
+
+    public override void Start()
+    {
+        if (!isMoving)
+        {
+            isMoving = true;
+            Console.WriteLine("Vehicle started moving on land.");
+        }
+    }
+
+    public override void Stop()
+    {
+        if (isMoving)
+        {
+            isMoving = false;
+            Console.WriteLine("Vehicle stopped moving on land.");
+        }
+    }
+
+    public override void Accelerate(float value)
+    {
+        if (isMoving)
+        {
+            currentSpeed += value;
+            if (currentSpeed > maxSpeed)
+                currentSpeed = maxSpeed;
+
+            Console.WriteLine($"Vehicle accelerated on land. Current speed: {currentSpeed} km/h");
+        }
+    }
+
+    public override void Decelerate(float value)
+    {
+        if (isMoving)
+        {
+            currentSpeed -= value;
+            if (currentSpeed < minSpeed)
+                currentSpeed = minSpeed;
+
+            Console.WriteLine($"Vehicle decelerated on land. Current speed: {currentSpeed} km/h");
+        }
+    }
+
+    public override string ToString()
+    {
+        string baseInfo = base.ToString();
+        return $"{baseInfo}, Number of Wheels: {numberOfWheels}";
+    }
+}
+
+class WaterVehicle : Vehicle
+{
+    private float displacement;
+
+    public WaterVehicle(float displacement)
+    {
+        environment = EnvironmentType.Water;
+        minSpeed = 1f;
+        maxSpeed = 40f;
+        this.displacement = displacement;
+    }
+
+    public override void Start()
+    {
+        if (!isMoving)
+        {
+            isMoving = true;
+            Console.WriteLine("Vehicle started moving on water.");
+        }
+    }
+
+    public override void Stop()
+    {
+        if (isMoving)
+        {
+            isMoving = false;
+            Console.WriteLine("Vehicle stopped moving on water.");
+        }
+    }
+
+    public override void Accelerate(float value)
+    {
+        if (isMoving)
+        {
+            currentSpeed += value;
+            if (currentSpeed > maxSpeed)
+                currentSpeed = maxSpeed;
+
+            Console.WriteLine($"Vehicle accelerated on water. Current speed: {currentSpeed} knots");
+        }
+    }
+
+    public override void Decelerate(float value)
+    {
+        if (isMoving)
+        {
+            currentSpeed -= value;
+            if (currentSpeed < minSpeed)
+                currentSpeed = minSpeed;
+
+            Console.WriteLine($"Vehicle decelerated on water. Current speed: {currentSpeed} knots");
+        }
+    }
+
+    public override string ToString()
+    {
+        string baseInfo = base.ToString();
+        return $"{baseInfo}, Displacement: {displacement} tons";
+    }
+}
+
+class AirVehicle : Vehicle
+{
+    private float wingspan;
+
+    public AirVehicle(float wingspan)
+    {
+        environment = EnvironmentType.Air;
+        minSpeed = 20f;
+        maxSpeed = 200f;
+        this.wingspan = wingspan;
+    }
+
+    public override void Start()
+    {
+        if (!isMoving)
+        {
+            isMoving = true;
+            Console.WriteLine("Vehicle started moving in the air.");
+        }
+    }
+
+    public override void Stop()
+    {
+        if (isMoving)
+        {
+            if (currentSpeed >= minSpeed)
+            {
+                Console.WriteLine("Cannot stop the vehicle while it is in the air.");
+                return;
+            }
+
+            isMoving = false;
+            Console.WriteLine("Vehicle stopped moving in the air.");
+        }
+    }
+
+    public override void Accelerate(float value)
+    {
+        if (isMoving)
+        {
+            currentSpeed += value;
+            if (currentSpeed > maxSpeed)
+                currentSpeed = maxSpeed;
+
+            Console.WriteLine($"Vehicle accelerated in the air. Current speed: {currentSpeed} m/s");
+        }
+    }
+
+    public override void Decelerate(float value)
+    {
+        if (isMoving)
+        {
+            if (currentSpeed <= minSpeed)
+            {
+                Console.WriteLine("Cannot further decelerate the vehicle while it is in the air.");
+                return;
+            }
+
+            currentSpeed -= value;
+            if (currentSpeed < minSpeed)
+                currentSpeed = minSpeed;
+
+            Console.WriteLine($"Vehicle decelerated in the air. Current speed: {currentSpeed} m/s");
+        }
+    }
+
+    public override string ToString()
+    {
+        string baseInfo = base.ToString();
+        return $"{baseInfo}, Wingspan: {wingspan} meters";
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        IVehicle car = new LandVehicle(4);
+        IVehicle boat = new WaterVehicle(100f);
+        IVehicle plane = new AirVehicle(30f);
+
+        car.Start();
+        car.Accelerate(50f);
+
+        boat.Start();
+        boat.Accelerate(10f);
+
+        plane.Start();
+        plane.Accelerate(40f);
+
+        Console.WriteLine(car.ToString());
+        Console.WriteLine(boat.ToString());
+        Console.WriteLine(plane.ToString());
+
+        List<IVehicle> vehicles = new List<IVehicle> { car, boat, plane };
+        Console.WriteLine("\nOriginal List:");
+        foreach (var vehicle in vehicles)
+        {
+            Console.WriteLine(vehicle.ToString());
+        }
+
+        Console.WriteLine("\nLand Vehicles:");
+        foreach (var vehicle in vehicles.OfType<LandVehicle>())
+        {
+            Console.WriteLine(vehicle.ToString());
+        }
+
+        Console.WriteLine("\nSorted List by Current Speed (Ascending):");
+        var sortedList = vehicles.OrderBy(v => v.CurrentSpeed).ToList();
+        foreach (var vehicle in sortedList)
+        {
+            Console.WriteLine(vehicle.ToString());
+        }
+
+        Console.WriteLine("\nLand Vehicles Sorted by Current Speed (Descending):");
+        var landVehicles = vehicles.OfType<LandVehicle>().OrderByDescending(v => v.CurrentSpeed).ToList();
+        foreach (var vehicle in landVehicles)
+        {
+            Console.WriteLine(vehicle.ToString());
+        }
+    }
+}
